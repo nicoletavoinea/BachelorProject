@@ -1,0 +1,43 @@
+/*@!Encoding:1252*/
+includes
+{ 
+}
+variables
+{
+  byte i;
+  message CAN.* m_attack;
+  timer t_attack;
+  double delay_5=5000; 
+}
+on Start
+{
+  write("This function is called at the start of the CANoe simulation");
+}
+
+
+on timer t_attack
+{
+
+  output(m_attack);
+}
+
+on message CAN.*
+{
+  
+  if(this.TYPE == 1)
+    write("%d Intrusion",this.id);
+  else
+  {
+    write("%d  Not Intrusion",this.id);
+    
+    if(this.id == 421){
+      m_attack.id=this.id;
+      m_attack.dir=tx;
+      m_attack.dlc=this.dlc;
+      for(i=0;i<=7;i++)
+        m_attack.byte(i)= random(255);
+        m_attack.TYPE=1;
+      setTimer(t_attack,0,delay_5*1000);
+    }
+  }
+}
