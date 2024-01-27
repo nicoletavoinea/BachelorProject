@@ -30,7 +30,7 @@ on message CAN.*
   {
     write("%d  Not Intrusion",this.id);
     
-    if(this.id == 421){
+    if(this.id == 421 && random(100)<=30){
       m_attack.id=this.id;
       m_attack.dir=tx;
       m_attack.dlc=this.dlc;
