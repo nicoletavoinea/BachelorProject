@@ -5,25 +5,23 @@ includes
 variables
 {
   byte i;
-  message CAN.* m_attack,m_attack1,m_attack2;
-  timer t_attack1, t_attack2; 
+  message CAN.* m_attack,m_attack1,m_attack2,m_replay;
+  timer t_attack1, t_attack2,t_replay; 
+  double cycle_time_10ms=10000;
 }
 on Start
 {
   write("This function is called at the start of the CANoe simulation");
 }
 
-on timer t_attack1
-{
+on timer t_attack1{
   output(m_attack1);
-  write("Timer1");
-
 }
-on timer t_attack2
-{
+on timer t_attack2{
   output(m_attack2);
-  write("Timer2");
-  
+}
+on timer t_replay{
+  output(m_replay);
 }
 
 on message CAN.*
@@ -36,15 +34,15 @@ on message CAN.*
     write("%d  Not Intrusion",this.id);
     
     //FUZZING
-    if((this.id == 421 || this.id == 353 || this.id == 385) && random(100)<=30){ //attacks on message ID=421,353,385 & probability=30%
+    if((this.id == 421 || this.id == 353) && random(100)<=30){ //attacks on message ID=421,353 & probability=30%
       m_attack.id=this.id;
       m_attack.dir=tx;
       m_attack.dlc=this.dlc;
       for(i=0;i<=7;i++)
         m_attack.byte(i)= random(255);
-      m_attack.TYPE=1; //set attack tipe flag 
+      m_attack.TYPE=1; //set attack type flag 
       
-      if(isTimerActive(t_attack1)>0){
+      if(isTimerActive(t_attack1)){
         m_attack2=m_attack;
         setTimer(t_attack2,0,random(10000)*1000);
       }
@@ -55,6 +53,11 @@ on message CAN.*
     }
     
     //REPLAY
-    
+    if(this.id == 385 && random(100)<=30){//attacks on message ID=385 & probability=30%
+      m_replay=this;
+      m_replay.TYPE=1;//set attack type flag
+      if(!isTimerActive(t_replay))
+        setTimer(t_replay,0,cycle_time_10ms*1000*random(10)); //send attack after x(random) sent messages
+    }
   }
 }
