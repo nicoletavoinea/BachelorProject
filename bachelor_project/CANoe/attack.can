@@ -29,8 +29,7 @@ on message CAN.*
   
   if(this.TYPE == 1) // attack
     write("%d Intrusion",this.id);
-  else //prepare for next attack
-  {
+  else {//prepare for next attack
     write("%d  Not Intrusion",this.id);
     
     //FUZZING
