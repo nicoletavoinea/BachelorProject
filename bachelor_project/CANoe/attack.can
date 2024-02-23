@@ -8,10 +8,15 @@ variables
   message CAN.* m_attack,m_attack1,m_attack2,m_replay;
   timer t_attack1, t_attack2,t_replay; 
   double cycle_time_10ms=10000;
+  dword output_file;
 }
 on Start
 {
   write("This function is called at the start of the CANoe simulation");
+  output_file=openFileWrite("output.txt",2);
+}
+on stopMeasurement{
+  fileClose(output_file);
 }
 
 on timer t_attack1{
@@ -26,11 +31,10 @@ on timer t_replay{
 
 on message CAN.*
 {
-  
   if(this.TYPE == 1) // attack
-    write("%d Intrusion",this.id);
-  else {//prepare for next attack
-    write("%d  Not Intrusion",this.id);
+    filePutString("Intrusion\n",20,output_file);
+  else {//prepare for next attac2k
+    filePutString("Not Intrusion\n",20,output_file);
     
     //FUZZING
     if((this.id == 421 || this.id == 353) && random(100)<=30){ //attacks on message ID=421,353 & probability=30%
