@@ -5,15 +5,15 @@ includes
 variables
 {
   byte i;
-  message CAN.* m_attack,m_attack1,m_attack2,m_replay;
-  timer t_attack1, t_attack2,t_replay; 
-  double cycle_time_10ms=10000;
+  message CAN.* m_attack,m_attack1,m_attack2,m_replay1, m_replay2,m_replay;
+  timer t_attack1, t_attack2,t_replay1, t_replay2; 
+  double cycle_time;
   dword output_file;
 }
 on Start
 {
   write("This function is called at the start of the CANoe simulation");
-  output_file=openFileWrite("output.txt",2);
+  output_file=openFileWrite("AttackLabels.txt",2);
 }
 on stopMeasurement{
   fileClose(output_file);
@@ -25,8 +25,11 @@ on timer t_attack1{
 on timer t_attack2{
   output(m_attack2);
 }
-on timer t_replay{
-  output(m_replay);
+on timer t_replay1{
+  output(m_replay1);
+}
+on timer t_replay2{
+  output(m_replay2);
 }
 
 on message CAN.*
@@ -36,8 +39,13 @@ on message CAN.*
   else {//prepare for next attack
     filePutString("Not Intrusion\n",20,output_file);
     
+    if(this.id==353 || this.id==385 || this.id==421 || this.id==505) cycle_time=10000; //10ms
+    if(this.id==580 || this.id==644 || this.id==645 ) cycle_time=20000; //20ms
+    if(this.id==852) cycle_time=40000; //40ms
+    if(this.id==1297 || this.id==1361 || this.id==1501 || this.id==1628 ) cycle_time=100000; //100ms
+    
     //FUZZING
-    if((this.id == 421 || this.id == 353) && random(100)<=30){ //attacks on message ID=421,353 & probability=30%
+    if(random(100)<=15){ //attacks on all messages with probability=15%
       m_attack.id=this.id;
       m_attack.dir=tx;
       m_attack.dlc=this.dlc;
@@ -47,20 +55,27 @@ on message CAN.*
       
       if(isTimerActive(t_attack1)){
         m_attack2=m_attack;
-        setTimer(t_attack2,0,random(10000)*1000);
+        setTimer(t_attack2,0,random(cycle_time)*1000);
       }
       else{
         m_attack1=m_attack;
-        setTimer(t_attack1,0,random(10000)*1000);
+        setTimer(t_attack1,0,random(cycle_time)*1000);
       } 
     }
     
     //REPLAY
-    if(this.id == 385 && random(100)<=30){//attacks on message ID=385 & probability=30%
+    if(random(100)<=30){//attacks on all messages & probability=20%
       m_replay=this;
       m_replay.TYPE=1;//set attack type flag
-      if(!isTimerActive(t_replay))
-        setTimer(t_replay,0,cycle_time_10ms*1000*random(10)); //send attack after x(random) sent messages
+      
+      if(isTimerActive(t_replay1)){
+        m_replay2=m_replay;
+        setTimer(t_replay2,0,random(2*cycle_time-1)*1000);
+      }
+      else{
+        m_replay1=m_replay;
+        setTimer(t_replay1,0,random(2*cycle_time-1)*1000);
+      } 
     }
   }
 }

@@ -7,6 +7,7 @@ variables{
   byte i;
   message CAN.* m_attack,m_attack1,m_attack2;
   timer t_attack1, t_attack2;
+  double cycle_time;
 }
 
 on Start{
@@ -32,8 +33,13 @@ on message CAN.*{
   else {//prepare for next attack
     filePutString("Not Intrusion\n",20,output_file);
     
+    if(this.id==353 || this.id==385 || this.id==421 || this.id==505) cycle_time=10000; //10ms
+      if(this.id==580 || this.id==644 || this.id==645 ) cycle_time=20000; //20ms
+      if(this.id==852) cycle_time=40000; //40ms
+      if(this.id==1297 || this.id==1361 || this.id==1501 || this.id==1628 ) cycle_time=100000; //100ms
+    
     //FUZZING
-    if((this.id == 421 || this.id == 353) && random(100)<=30){ //attacks on message ID=421,353 & probability=30%
+    if(random(100)<=20){ //attacks on all messages & probability=20%
       m_attack.id=this.id;
       m_attack.dir=tx;
       m_attack.dlc=this.dlc;
@@ -43,11 +49,11 @@ on message CAN.*{
       
       if(isTimerActive(t_attack1)){
         m_attack2=m_attack;
-        setTimer(t_attack2,0,random(10000)*1000);
+        setTimer(t_attack2,0,random(cycle_time)*1000);
       }
       else{
         m_attack1=m_attack;
-        setTimer(t_attack1,0,random(10000)*1000);
+        setTimer(t_attack1,0,random(cycle_time)*1000);
       } 
     }
   }
