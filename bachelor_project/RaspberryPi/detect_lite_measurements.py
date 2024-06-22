@@ -58,7 +58,7 @@ def process_input(can_data):
     np_can_data[:len(can_data)] = can_data    
     np_can_data=np.expand_dims(np_can_data, axis=0)
     
-    return np_can_data,attack 
+    return np_can_data,attack
     
     
 def classify_data(data,interpreter,input_details,output_details):
@@ -67,11 +67,12 @@ def classify_data(data,interpreter,input_details,output_details):
     interpreter.invoke()
     predicted=interpreter.get_tensor(output_details[0]['index'])
     end=time.time()	
-    predicted=round(predicted[0][0], 0)
-    return end-start,predicted
+    return end-start,round(predicted[0][0], 0)
     
   
 def main():
+  time_sum=0
+  nr=0
   interpreter,input_details,output_details=load_h5_model('model.tflite')
 
   while True:
@@ -79,7 +80,10 @@ def main():
     can_data = read_input(can_input)
     can_data,attack= process_input(can_data)
     elapsed, prediction=classify_data(can_data,interpreter,input_details,output_details)
-    print_message(can_data,prediction,attack,elapsed)
+    time_sum+=elapsed
+    nr+=1
+    if(nr==10):
+      break
   print(f'Average time: {time_sum/10}')
 
 if __name__ == "__main__":

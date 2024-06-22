@@ -26,30 +26,29 @@ def process_input(can_data):
     can_data=can_data.replace('can0', '')
     can_data=can_data.replace('[', '')
     can_data=can_data.replace(']', '')
-    can_data = can_data.split() #timestamp(float), id(hex), dlc(int), bytes(hex,no padding)
+    can_data = can_data.split() #timestamp, id(hex), dlc, bytes(hex,no padding)
     can_data[0]=float(can_data[0])
+
     can_data[1]=int(can_data[1],16)
-    if can_data[1] & 0x2:
-      attack=1
-      can_data[1]=can_data[1]-2
-    else:
-      attack=0
     can_data[2]=int(can_data[2])
     for i in range(can_data[2]):
       can_data[i+3]=int(can_data[i+3],16)
-    np_can_data = np.zeros(11, dtype=np.float32)
+    np_can_data = np.zeros(11, dtype=float)
     
     np_can_data[:len(can_data)] = can_data    
     np_can_data=np.expand_dims(np_can_data, axis=0)
-    return np_can_data,attack
     
+    return np_can_data #modify to return the exact struacture (to pass directly to predict)
 	
 def classify_data(data,model):
     start=time.time()
     predicted= model.predict(data,verbose=0)
     end=time.time()	
-
-    return end-start,round(predicted[0][0], 0)
+			
+    predicted=round(predicted[0][0], 0)
+    #actual=labels[index]
+    #print_message(entry,predicted,actual,end-start)
+    return end-start,predicted
 	
 def print_message(msg, predicted, actual,elapsed_time):
   msg=msg[0].tolist()
@@ -64,13 +63,20 @@ def print_message(msg, predicted, actual,elapsed_time):
  
 
 def main():
+  time_sum=0
+  nr=0
   model=load_keras_model('model.h5')
   while True:
     can_input = input('')
     can_data = read_input(can_input)
-    can_data,attack= process_input(can_data)
+    can_data= process_input(can_data)
     elapsed, prediction=classify_data(can_data,model)
-    print_message(can_data,prediction,attack,elapsed)
+    time_sum+=elapsed
+    nr+=1
+    if(nr==10):
+      print("Stop")
+      print(f'Average time: {time_sum/10}')
+      break
 
 if __name__ == "__main__":
     main()
