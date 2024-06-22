@@ -26,6 +26,6 @@ For this phase you need to have a RaspberryPi with all the needed packages insta
    2. Configure the CAN communication by running in the terminal:
       `sudo ip link set can0 up type can bitrate 500000`
    4. Start the communication by running in the terminal:
-      `sudo ifconfig can0 u`p
+      `sudo ifconfig can0 up`
    5. Execute the live demo program by running in the terminal:
       `candump -t z can0 | python3 detect_lite.py`
