@@ -1,22 +1,18 @@
 /*@!Encoding:1252*/
-includes
-{ 
+includes{ 
 }
-variables
-{
+variables{
   byte i;
-  message CAN.* m_attack,m_attack1,m_attack2,m_replay1, m_replay2,m_replay;
+  message CAN1.* m_attack,m_attack1,m_attack2,m_replay1, m_replay2,m_replay;
   timer t_attack1, t_attack2,t_replay1, t_replay2; 
   double cycle_time;
   dword output_file;
 }
-on Start
-{
+on Start{
   write("This function is called at the start of the CANoe simulation");
-  output_file=openFileWrite("AttackLabels.txt",2);
 }
 on stopMeasurement{
-  fileClose(output_file);
+  write("This function is called at the end of the CANoe simulation");
 }
 
 on timer t_attack1{
@@ -29,15 +25,13 @@ on timer t_replay1{
   output(m_replay1);
 }
 on timer t_replay2{
-  output(m_replay2);
+  output(m_replay2); 
 }
+
 
 on message CAN.*
 {
-  if(this.TYPE == 1) // attack
-    filePutString("Intrusion\n",20,output_file);
-  else {//prepare for next attack
-    filePutString("Not Intrusion\n",20,output_file);
+  if(this.TYPE != 1){//prepare for attack
     
     if(this.id==353 || this.id==385 || this.id==421 || this.id==505) cycle_time=10000; //10ms
     if(this.id==580 || this.id==644 || this.id==645 ) cycle_time=20000; //20ms
@@ -55,25 +49,30 @@ on message CAN.*
       
       if(isTimerActive(t_attack1)){
         m_attack2=m_attack;
+        m_attack2.id=m_attack.id |0x2;
         setTimer(t_attack2,0,random(cycle_time)*1000);
       }
       else{
         m_attack1=m_attack;
+        m_attack1.id=m_attack.id |0x2;
         setTimer(t_attack1,0,random(cycle_time)*1000);
-      } 
+      }
+      
     }
     
     //REPLAY
-    if(random(100)<=15){//attacks on all messages & probability=20%
+    if(random(100)<=5){//attacks on all messages & probability=20%
       m_replay=this;
       m_replay.TYPE=1;//set attack type flag
       
       if(isTimerActive(t_replay1)){
         m_replay2=m_replay;
+        m_replay2.id=m_replay.id | 0x2;
         setTimer(t_replay2,0,random(2*cycle_time-1)*1000);
       }
       else{
         m_replay1=m_replay;
+        m_replay1.id=m_replay.id | 0x2;
         setTimer(t_replay1,0,random(2*cycle_time-1)*1000);
       } 
     }

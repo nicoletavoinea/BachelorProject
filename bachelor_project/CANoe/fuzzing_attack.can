@@ -39,7 +39,7 @@ on message CAN.*{
       if(this.id==1297 || this.id==1361 || this.id==1501 || this.id==1628 ) cycle_time=100000; //100ms
     
     //FUZZING
-    if(random(100)<=20){ //attacks on all messages & probability=20%
+    if(random(100)<=30){ //attacks on all messages & probability=20%
       m_attack.id=this.id;
       m_attack.dir=tx;
       m_attack.dlc=this.dlc;
